@@ -5,17 +5,19 @@ START:
 	STA 08D9H 
 	STA 08DAH
 	STA 08DBH
-	MVI A,0DH	;initialize interrupt
+
+	MVI A,1DH	;initialize interrupt
 	SIM
 	EI
 
 WAIT:	PUSH D
 	CALL DCD	;keep display on
 	POP D
-	JMP WAIT	;get new input
-CALLY:
-	CALL DISPLAY
-	JMP CALLY
+	JMP START	;get new input
+
+INTR_ROUTINE:
+	CALL DISPLAY	;start intr routine
+
 DISPLAY:
 	MVI A,FEH
 	STA 3000H
@@ -30,6 +32,6 @@ DISPLAY:
 	POP B
 	CALL DELB
 	JMP DISPLAY
-	
+	EI
 	RET
 END
