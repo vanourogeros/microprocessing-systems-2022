@@ -1,0 +1,65 @@
+	IN 10H
+START:
+	MVI A,10H	;fix display
+	STA 08D8H 
+	STA 08D9H 
+	STA 08DAH
+	STA 08DBH
+	STA 08DCH
+	STA 08DDH
+	
+	MVI A,0DH	;initialize interrupt
+	SIM
+	EI
+
+WAIT:	
+	PUSH D
+	CALL DCD	;keep display on
+	POP D
+	JMP WAIT	;get new input
+
+
+INTR_ROUTINE:
+	PUSH D
+	MVI C,45H	;INITIALIZE TO 45 SEC
+	
+CONTINUE:
+	MOV A,C
+	ANI F0H
+	RRC 
+	RRC
+	RRC
+	RRC
+	
+	STA 08DDH
+	MOV A,C
+	ANI 0FH
+
+	STA 08DCH
+	LXI D,08D8H
+	CALL STDM	;show keyboard input on display
+	CALL DCD
+
+	MOV A,C
+	
+	DCR C
+	MOV A,C
+	CPI 00H
+	JZ START
+	MVI A,FFH
+	STA 3000H
+	MVI B,03H	;initialize DELB
+
+	PUSH B
+	CALL DELB
+	
+	MVI A,00H
+	STA 3000H
+	POP B
+	CALL DELB
+	POP D
+	MOV A,C
+	JNZ CONTINUE
+	EI
+	RET
+END
