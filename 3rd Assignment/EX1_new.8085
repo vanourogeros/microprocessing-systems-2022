@@ -16,50 +16,65 @@ WAIT:
 	PUSH D
 	CALL DCD	;keep display on
 	POP D
+	EI
 	JMP WAIT	;get new input
 
 
 INTR_ROUTINE:
 	PUSH D
+	EI
 	MVI C,45H	;INITIALIZE TO 45 SEC
 	
 CONTINUE:
 	MOV A,C
+	EI
 	ANI F0H
 	RRC 
 	RRC
 	RRC
 	RRC
-	
 	STA 08DDH
 	MOV A,C
+	
 	ANI 0FH
-
 	STA 08DCH
+DISPLAY:
 	LXI D,08D8H
-	CALL STDM	;show keyboard input on display
+	CALL STDM	;show display
 	CALL DCD
 
+	ANI 0FH
+	CPI 00H
 	MOV A,C
-	
+	ANI F0H
+	JZ ZEROS
+LATER:
+	MOV A,C
 	DCR C
 	MOV A,C
 	CPI 00H
-	JZ START
+	JZ START	
+
 	MVI A,FFH
 	STA 3000H
 	MVI B,03H	;initialize DELB
 
-	PUSH B
 	CALL DELB
 	
 	MVI A,00H
 	STA 3000H
-	POP B
 	CALL DELB
-	POP D
 	MOV A,C
 	JNZ CONTINUE
 	EI
 	RET
+
+ZEROS:		;check if last counter digit is zero
+	DCR A
+	STA 08DDH
+	MVI A,09H
+	STA 08DCH
+
+	JMP DISPLAY
+
 END
