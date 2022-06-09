@@ -1,0 +1,35 @@
+	IN 10H
+START:
+	MVI A,10H	;fix display
+	STA 08D8H 
+	STA 08D9H 
+	STA 08DAH
+	STA 08DBH
+	MVI A,0DH	;initialize interrupt
+	SIM
+	EI
+
+WAIT:	PUSH D
+	CALL DCD	;keep display on
+	POP D
+	JMP WAIT	;get new input
+CALLY:
+	CALL DISPLAY
+	JMP CALLY
+DISPLAY:
+	MVI A,FEH
+	STA 3000H
+	MVI B,01H	;initialize DELB
+	MVI C,11H
+	PUSH B
+	CALL DELB
+	
+	
+	ANI 00H
+	STA 3000H
+	POP B
+	CALL DELB
+	JMP DISPLAY
+	
+	RET
+END

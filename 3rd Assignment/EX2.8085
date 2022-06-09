@@ -1,0 +1,82 @@
+	IN 10H
+START:
+	MVI A,10H	;fix display
+	STA 08D8H 
+	STA 08D9H 
+	STA 08DCH
+	STA 08DDH
+	MVI A,0DH	;initialize interrupt
+	SIM
+	EI
+WAIT:	PUSH D
+	CALL DCD	;keep display on
+	POP D
+	JMP START	;get new input
+INTR_ROUTINE:
+	MVI A,00H	;let kind read our input 
+	CALL KIND
+	STA 08DBH 	
+	CALL KIND
+	STA 08DAH
+	LXI D,08D8H
+
+	CALL STDM	;show keyboard input on display
+	CALL DCD
+	JMP DISPLAY	;jump to display to fix LEDs
+	EI
+	RET
+DISPLAY:
+	MVI A,00H	;turn off LEDs
+	CMA
+	STA 3000H
+
+	LDA 08DBH	;put correct input in A
+	RLC
+	RLC
+	RLC
+	RLC
+	MOV B,A
+	LDA 08DAH
+	ORA B 
+	MOV B,A
+
+	MVI C,38H	;first katofli C = K1 = 38H
+	MVI D,96H	;second katofli D = K2 = 96H
+	MVI E,C7H	;third katofli E = K3 = C7H
+
+	MOV A,B
+	CMP C		;if input <= K1 jump disp1
+	JC DISP1	
+	JZ DISP1
+	MOV A,B
+	CMP D
+	JC DISP2	;if K1 < input <= K2 jump disp2
+	JZ DISP2
+	MOV A,B
+	CMP E
+	JC DISP3	;if K2 < input <= K3 jump disp3
+	JZ DISP3
+	JNZ DISP4	;else jump disp4
+	RET
+	
+DISP1:
+	MVI A,FEH	;turn on 1111 1110
+	STA 3000H
+	EI
+	RET
+DISP2:
+	MVI A,FDH	;turn on 1111 1101
+	STA 3000H
+	EI
+	RET
+DISP3:
+	MVI A,FBH	;turn on 1111 1011
+	STA 3000H
+	EI
+	RET
+DISP4:
+	MVI A,F7H	;turn on 1111 0111
+	STA 3000H
+	EI
+	RET
+END
